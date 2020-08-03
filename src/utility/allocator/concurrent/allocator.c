@@ -162,8 +162,8 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
 
     // karmalloc
     *(PMemHeader *)_pmem_user_head = base;
-    (PMemHeader *)_pmem_mmap_head.s.ptr = &base;
-    (PMemHeader *)_pmem_mmap_head.s.size = _pmem_user_size - sizeof(PMemHeader);
+    (PMemHeader *)_pmem_mmap_head->s.ptr = &base;
+    (PMemHeader *)_pmem_mmap_head->s.size = _pmem_user_size - sizeof(PMemHeader);
     // base.s.ptr = &base;
     // base.s.size = _pmem_user_size - sizeof(PMemHeader);
 
