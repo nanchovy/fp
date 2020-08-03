@@ -67,8 +67,6 @@ typedef union Pheader PMemHeader;
 
 // PMemHeader base;
 PMemHeader *allocp;
-
-#define NULL 0
 #define NALLOC 128
 
 void initMemoryRoot(MemoryRoot *mr, unsigned char thread_num, void *head, size_t pmem_size, size_t node_size, FreeNode *global_list_head) {
