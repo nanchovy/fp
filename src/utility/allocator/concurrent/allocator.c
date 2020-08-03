@@ -1,5 +1,5 @@
 #ifndef CONCURRENT
-#  error "CONCURRENT is not defined!"
+// #  error "CONCURRENT is not defined!"
 #endif
 #include "allocator.h"
 
@@ -23,12 +23,15 @@ typedef struct FreeNode {
 typedef struct MemoryRoot {
     unsigned char global_lock;
     void *global_free_area_head;
-    size_t remaining_amount;
-    FreeNode *global_free_list_head; // for after recovery
-    unsigned char **list_lock;
-    FreeNode ***local_free_list_head_ary; // [i][j] -> スレッドiの持つスレッドj用のフリーリストへのポインタ
-    FreeNode ***local_free_list_tail_ary; // [i][j] -> スレッドiの持つスレッドj用のフリーリスト末尾へのポインタ
+    // size_t remaining_amount;
+    // FreeNode *global_free_list_head; // for after recovery
+    // unsigned char **list_lock;
+    // FreeNode ***local_free_list_head_ary; // [i][j] -> スレッドiの持つスレッドj用のフリーリストへのポインタ
+    // FreeNode ***local_free_list_tail_ary; // [i][j] -> スレッドiの持つスレッドj用のフリーリスト末尾へのポインタ
 } MemoryRoot;
+
+
+
 
 /*
  * 構造：
@@ -48,96 +51,36 @@ MemoryRoot *_pmem_memory_root = NULL;
 size_t _tree_node_size = 0;
 unsigned char _initialized_by_others = 0;
 
-void *getFromArea(void **head, size_t node_size) {
-    // while(!__sync_bool_compare_and_swap(&lock, 0, 1));
-    void *new = *head;
-    *head += node_size;
-    return new;
-}
+// for karmalloc
+typedef double ALIGN;
 
-FreeNode *getFromList(FreeNode **head, FreeNode **tail) {
-    if (*head != NULL) {
-        FreeNode *node;
-        node = *head;
-        *head = node->next;
-        if (node->next == NULL) {
-            *tail = NULL;
-        }
-        return node;
-    }
-    return NULL;
-}
+union Pheader {
+    struct
+    {
+        union Pheader *ptr; // pointer of next block
+        unsigned size;      // size program can use
+    } s;
+    ALIGN x;
+};
 
-void addToList(FreeNode *node, FreeNode **head, FreeNode **tail) {
-    if (*tail != NULL) {
-        (*tail)->next = node;
-    } else {
-        *head = node;
-    }
-    node->next = NULL;
-    *tail = node;
-}
+typedef union Pheader PMemHeader;
 
-size_t addDefaultEmptyNode(FreeNode **head, FreeNode **tail, FreeNode *global_list_head, size_t pmem_remain, size_t node_size, void **free_head) {
-    int i;
-    size_t used_amount = 0;
-    for (i = 0; i < DEFAULT_NODE_NUM; i++) {
-        if (global_list_head != NULL) {
-            // if recovery found free node
-        } else {
-            if (pmem_remain >= node_size) {
-                FreeNode *new = (FreeNode *)vol_mem_allocate(sizeof(FreeNode));
-                new->next = NULL;
-                new->node = getFromArea(free_head, node_size);
-                addToList(new, head, tail);
-                pmem_remain -= node_size;
-                used_amount += node_size;
-            } else {
-                return -1; // out of memory
-            }
-        }
-    }
-    return used_amount;
-}
+// PMemHeader base;
+PMemHeader *allocp;
+
+#define NULL 0
+#define NALLOC 128
 
 void initMemoryRoot(MemoryRoot *mr, unsigned char thread_num, void *head, size_t pmem_size, size_t node_size, FreeNode *global_list_head) {
     mr->global_lock = 0;
     mr->global_free_area_head = head;
-    mr->global_free_list_head = global_list_head;
-    mr->remaining_amount = pmem_size;
-    mr->local_free_list_head_ary = (FreeNode ***)vol_mem_allocate(sizeof(FreeNode **) * thread_num);
-    mr->local_free_list_tail_ary = (FreeNode ***)vol_mem_allocate(sizeof(FreeNode **) * thread_num);
-    mr->list_lock = (unsigned char **)vol_mem_allocate(sizeof(unsigned char *) * thread_num);
-    int i, j;
-    for (i = 0; i < thread_num; i++) {
-        mr->local_free_list_head_ary[i] = (FreeNode **)vol_mem_allocate(sizeof(FreeNode *) * thread_num);
-        mr->local_free_list_tail_ary[i] = (FreeNode **)vol_mem_allocate(sizeof(FreeNode *) * thread_num);
-        mr->list_lock[i] = (unsigned char *)vol_mem_allocate(sizeof(unsigned char) * thread_num);
-        for (j = 0; j < thread_num; j++) {
-            mr->local_free_list_head_ary[i][j] = NULL;
-            mr->local_free_list_tail_ary[i][j] = NULL;
-            if (i == j) {
-                addDefaultEmptyNode(&mr->local_free_list_head_ary[i][j], &mr->local_free_list_tail_ary[i][j],
-                    mr->global_free_list_head, mr->remaining_amount, node_size, &mr->global_free_area_head);
-            }
-            mr->list_lock[i][j] = 0;
-        }
-    }
 }
 void destroyMemoryRoot(MemoryRoot *mr) {
     // TODO: need to traverse free list
-    int i;
-    for (i = 0; i < _number_of_thread; i++) {
-        vol_mem_free(mr->local_free_list_head_ary[i]);
-        vol_mem_free(mr->local_free_list_tail_ary[i]);
-        vol_mem_free(mr->list_lock[i]);
-    }
-    vol_mem_free(mr->local_free_list_head_ary);
-    vol_mem_free(mr->local_free_list_tail_ary);
-    vol_mem_free(mr->list_lock);
+    return 0;
 }
 
-int comparePAddr(PAddr a, PAddr b) {
+int isSamePAddr(PAddr a, PAddr b) {
     return (a.fid == b.fid) && (a.offset == b.offset);
 }
 
@@ -146,14 +89,14 @@ ppointer getPersistentAddr(void *addr) {
     if (addr == NULL) {
         return PADDR_NULL;
     } else {
-        paddr.fid = 1;
+        paddr.fid = 1;  // for single thread
         paddr.offset = addr - _pmem_mmap_head;
         return paddr;
     }
 }
 
 void *getTransientAddr(ppointer paddr) {
-    if (comparePAddr(paddr, PADDR_NULL)) {
+    if (isSamePAddr(paddr, PADDR_NULL)) {
         return NULL;
     } else {
         return _pmem_mmap_head + paddr.offset;
@@ -218,6 +161,13 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
     _pmem_user_size = pmem_size - sizeof(AllocatorHeader);
     memset(_pmem_mmap_head, 0, _pmem_mmap_size);
 
+
+    // karmalloc
+    PMemHeader base;
+    *(PMemHeader *)_pmem_user_head = base;
+    base.s.ptr = &base;
+    base.s.size = _pmem_user_size - sizeof(PMemHeader);
+
     // fd can be closed after mmap
     err = close(fd);
     if (err == -1) {
@@ -255,7 +205,7 @@ ppointer *root_allocate(size_t size, size_t node_size) {
 #endif
     _tree_node_size = node_size;
     ppointer *root_p = (ppointer *)_pmem_user_head;
-    if (comparePAddr(PADDR_NULL, ((AllocatorHeader*)_pmem_mmap_head)->node_head)) {
+    if (isSamePAddr(PADDR_NULL, ((AllocatorHeader*)_pmem_mmap_head)->node_head)) {
         ((AllocatorHeader *)_pmem_mmap_head)->node_head = getPersistentAddr(_pmem_user_head);
     }
     return root_p;
@@ -265,67 +215,44 @@ void root_free(ppointer *root) {
 }
 
 ppointer pst_mem_allocate(size_t size, unsigned char tid) {
-#ifdef DEBUG
-    printf("allocate %luB\n", size);
-#endif
-    tid--;
-    FreeNode *free_node;
     void *new_node;
-    // assert (size == _tree_node_size);
-#ifdef DEBUG
-    printf("tail = %p\n", _pmem_memory_root->local_free_list_tail_ary[tid][tid]);
-#endif
-    if (_pmem_memory_root->local_free_list_tail_ary[tid][tid] != NULL) {
-        free_node = getFromList(&_pmem_memory_root->local_free_list_head_ary[tid][tid], &_pmem_memory_root->local_free_list_tail_ary[tid][tid]);
-        new_node = free_node->node;
-        vol_mem_free(free_node);
-#ifdef DEBUG
-        printf("reusing free node: %p\n", new_node);
-#endif
-    } else {
-        int i;
-        for (i = 0; i < _number_of_thread; i++) {
-            if (_pmem_memory_root->local_free_list_tail_ary[i][tid] != NULL &&
-                _pmem_memory_root->local_free_list_tail_ary[i][tid] != _pmem_memory_root->local_free_list_head_ary[i][tid]) {
-                while (!__sync_bool_compare_and_swap(&_pmem_memory_root->list_lock[i][tid], 0, 1))
-                    _mm_pause();
-                free_node = getFromList(&_pmem_memory_root->local_free_list_head_ary[i][tid], &_pmem_memory_root->local_free_list_tail_ary[i][tid]);
-                _pmem_memory_root->list_lock[i][tid] = 0;
-                new_node = free_node->node;
-                vol_mem_free(free_node);
-#ifdef DEBUG
-                printf("take free node from %d\n", i);
-#endif
-                break;
-            }
-        }
-        if (i == _number_of_thread) {
-            while (!__sync_bool_compare_and_swap(&_pmem_memory_root->global_lock, 0, 1))
-                _mm_pause();
-            if (_pmem_memory_root->global_free_area_head + NB_NODE_AT_ONCE * _tree_node_size > _pmem_mmap_head + _pmem_mmap_size) {
-                fprintf(stderr, "out of memory\n");
-                exit(1);
-            }
-#ifdef DEBUG
-            printf("allocating: %p -> %p\n", _pmem_memory_root->global_free_area_head, _pmem_memory_root->global_free_area_head + NB_NODE_AT_ONCE * _tree_node_size);
-#endif
-            new_node = getFromArea(&_pmem_memory_root->global_free_area_head, NB_NODE_AT_ONCE * _tree_node_size);
-            for (int i = 1; i < NB_NODE_AT_ONCE; i++) {
-                FreeNode *new_free = (FreeNode *)vol_mem_allocate(sizeof(FreeNode));
-                new_free->node = ((char *)new_node) + _tree_node_size * i;
-#ifdef DEBUG
-                printf("additional node allocate: %p\n", new_free->node);
-#endif
-                addToList(new_free, &_pmem_memory_root->local_free_list_head_ary[tid][tid], &_pmem_memory_root->local_free_list_tail_ary[tid][tid]);
-            }
-            _pmem_memory_root->global_lock = 0;
-#ifdef DEBUG
-            printf("take free node from global\n");
-#endif
-        }
-    }
+
+    new_node = karmalloc(size);
     return getPersistentAddr(new_node);
 }
+
+void *karmalloc(size_t nbytes) {
+    PMemHeader *p, *q;
+    unsigned nunits;
+
+    nunits = (nbytes + sizeof(PMemHeader) - 1) / sizeof(PMemHeader) + 1; // number of block this function looking for
+    if ((q = allocp) == NULL) {
+        // initialization
+        base.s.ptr = allocp = q = &base;
+        base.s.size = 0;
+    }
+    for (p = q->s.ptr;; q = p, p->s.ptr) {
+        if (p->s.size >= nunits) {
+            if (p->s.size == nunits) {
+                // exactly
+                q->s.ptr = p->s.ptr;
+            } else {
+                p->s.size -= nunits;
+                p += p->s.size;
+                p->s.size = nunits;
+            }
+            allocp = q;
+            return ((char *)(p + 1)); // return only data part (without header)
+        }
+        if (p == allocp && (p = morecore(nunits)) == NULL) {
+            // when p returns to start block (in case there is not block which has enough memory)
+            // TODO: implement morecore
+            return (NULL);
+        }
+    }
+}
+
+
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
     node_tid--;
