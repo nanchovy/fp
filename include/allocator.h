@@ -57,6 +57,8 @@ void root_free(ppointer *);
 ppointer getPersistentAddr(void *);
 void *getTransientAddr(ppointer);
 
+void *karmalloc(size_t nbytes);
+
 #  ifdef __cplusplus
 };
 #  endif
