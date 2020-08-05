@@ -231,7 +231,8 @@ void *karmalloc(size_t nbytes) {
         base.s.ptr = allocp = q = &base;
         base.s.size = 0;
         
-        PMemHeader mem_head = (PMemHeader) _pmem_user_head;
+        PMemHeader mem_head;
+        *(PMemHeader)_pmem_user_head = mem_head;
         mem_head.s.ptr = &base;
         mem_head.s.size = (_pmem_user_size - sizeof(PMemHeader) / sizeof(PMemHeader));
         base.ptr = (PMemHeader *) mem_head;
