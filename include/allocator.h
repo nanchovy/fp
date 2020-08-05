@@ -43,6 +43,20 @@ typedef void * ppointer;
 typedef void AllocatorHeader;
 #endif
 
+// for karmalloc
+typedef double ALIGN;
+
+union Pheader {
+    struct
+    {
+        union Pheader *ptr; // pointer of next block
+        unsigned size;      // size program can use
+    } s;
+    ALIGN x;
+};
+
+typedef union Pheader PMemHeader;
+
 int initAllocator(void *, const char *, size_t, unsigned char);
 int destroyAllocator();
 ppointer recoverAllocator(ppointer (*)(ppointer));
@@ -58,6 +72,7 @@ ppointer getPersistentAddr(void *);
 void *getTransientAddr(ppointer);
 
 void *karmalloc(size_t nbytes);
+PMemHeader *karmorecore(u_int32_t nu);
 
 #  ifdef __cplusplus
 };

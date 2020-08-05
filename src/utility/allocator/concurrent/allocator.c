@@ -51,19 +51,7 @@ MemoryRoot *_pmem_memory_root = NULL;
 size_t _tree_node_size = 0;
 unsigned char _initialized_by_others = 0;
 
-// for karmalloc
-typedef double ALIGN;
 
-union Pheader {
-    struct
-    {
-        union Pheader *ptr; // pointer of next block
-        unsigned size;      // size program can use
-    } s;
-    ALIGN x;
-};
-
-typedef union Pheader PMemHeader;
 
 PMemHeader base;
 PMemHeader *allocp;
@@ -257,9 +245,7 @@ void *karmalloc(size_t nbytes) {
     }
 }
 
-static PMemHeader *
-karmorecore(u_int32_t nu)
-{
+PMemHeader* karmorecore(u_int32_t nu) {
     char *cp;
     PMemHeader *up;
     int rnu;
