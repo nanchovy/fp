@@ -245,6 +245,27 @@ void *karmalloc(size_t nbytes) {
     }
 }
 
+void karfree(void *ap) {
+	PMemHeader *p, *q;
+
+	p = (PMemHeader *) ap - 1;
+	for (q = allocp; !(p > q && p < q->s.ptr); q = q->s.ptr)
+		if (q >= q->s.ptr && (p > q || p < q->s.ptr))
+			break;
+
+	if (p + p->s.size == q->s.ptr) {
+		p->s.size += q->s.ptr->s.size;
+		p->s.ptr = q->s.ptr->s.ptr;
+	} else
+		p->s.ptr = q->s.ptr;
+	if (q + q->s.size == p) {
+		q->s.size += p->s.size;
+		q->s.ptr = p->s.ptr;
+	} else
+		q->s.ptr = p;
+	allocp = q;
+}
+
 PMemHeader* karmorecore(u_int32_t nu) {
     char *cp;
     PMemHeader *up;
@@ -256,19 +277,13 @@ PMemHeader* karmorecore(u_int32_t nu) {
         return (NULL);
     up = (PMemHeader *)cp;
     up->s.size = rnu;
-    free((char *)(up + 1));
+    karfree((char *)(up + 1));
     return (allocp);
 }
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
-    node_tid--;
-    tid--;
-    FreeNode *new_free = (FreeNode *)vol_mem_allocate(sizeof(FreeNode));
-    new_free->node = getTransientAddr(node);
-    while (!__sync_bool_compare_and_swap(&_pmem_memory_root->list_lock[tid][node_tid], 0, 1))
-	    _mm_pause();
-    addToList(new_free, &_pmem_memory_root->local_free_list_head_ary[tid][node_tid], &_pmem_memory_root->local_free_list_tail_ary[tid][node_tid]);
-    _pmem_memory_root->list_lock[tid][node_tid] = 0;
+    karfree((void *) node);
+    return;
 }
 
 void *vol_mem_allocate(size_t size) {
