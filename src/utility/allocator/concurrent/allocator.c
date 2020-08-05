@@ -239,12 +239,12 @@ void *karmalloc(size_t nbytes) {
     }
     for (p = q->s.ptr;; q = p, p = p->s.ptr) {
         if (p->s.size >= nunits) {
-            if (p->s.size =                    // exactly
+            if (p->s.size = nunits) // exactly
                 q->s.ptr = p->s.ptr;
-            } else {
+            else {
                 p->s.size -= nunits;
                 p += p->s.size;
-                p->s.size             ;
+                p->s.size = nunits;
            }
             allocp = q;
             return ((char *)(p + 1)); // return only data part (without header)
