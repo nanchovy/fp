@@ -232,15 +232,14 @@ void *karmalloc(size_t nbytes) {
         base.s.size = 0;
         
         PMemHeader mem_head;
-        *(PMemHeader)_pmem_user_head = mem_head;
         mem_head.s.ptr = &base;
-        mem_head.s.size = (_pmem_user_size - sizeof(PMemHeader) / sizeof(PMemHeader));
-        base.ptr = (PMemHeader *) mem_head;
+        mem_head.s.size = (_pmem_user_size - sizeof(PMemHeader)) / sizeof(PMemHeader);
+        *(PMemHeader)_pmem_user_head = mem_head;
+        base.s.ptr = (PMemHeader *) mem_head;
     }
     for (p = q->s.ptr;; q = p, p = p->s.ptr) {
         if (p->s.size >= nunits) {
-            if (p->s.size == nunits) {
-                // exactly
+            if (p->s.size =                    // exactly
                 q->s.ptr = p->s.ptr;
             } else {
                 p->s.size -= nunits;
