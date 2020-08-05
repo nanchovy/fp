@@ -282,8 +282,7 @@ PMemHeader* karmorecore(u_int32_t nu) {
 }
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
-    karfree((void *) node);
-    return;
+    karfree(getTransientAddr(node));
 }
 
 void *vol_mem_allocate(size_t size) {
