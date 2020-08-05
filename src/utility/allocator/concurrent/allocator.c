@@ -161,11 +161,12 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
 
 
     // karmalloc
-    *(PMemHeader *)_pmem_user_head = base;
-    (PMemHeader *)_pmem_mmap_head->s.ptr = &base;
-    (PMemHeader *)_pmem_mmap_head->s.size = _pmem_user_size - sizeof(PMemHeader);
-    // base.s.ptr = &base;
-    // base.s.size = _pmem_user_size - sizeof(PMemHeader);
+    // PMemHeader *base_PMemHeader;
+    // base_PMemHeader = (PMemHeader *)_pmem_user_head;
+    // // *(PMemHeader *)_pmem_user_head = base;
+    // *base_PMemHeader = base;
+    // // base.s.ptr = &base;
+    // // base.s.size = _pmem_user_size - sizeof(PMemHeader);
 
     // fd can be closed after mmap
     err = close(fd);
@@ -229,8 +230,13 @@ void *karmalloc(size_t nbytes) {
         // initialization
         base.s.ptr = allocp = q = &base;
         base.s.size = 0;
+        
+        PMemHeader mem_head = (PMemHeader) _pmem_user_head;
+        mem_head.s.ptr = &base;
+        mem_head.s.size = (_pmem_user_size - sizeof(PMemHeader) / sizeof(PMemHeader));
+        base.ptr = (PMemHeader *) mem_head;
     }
-    for (p = q->s.ptr;; q = p, p->s.ptr) {
+    for (p = q->s.ptr;; q = p, p = p->s.ptr) {
         if (p->s.size >= nunits) {
             if (p->s.size == nunits) {
                 // exactly
@@ -238,12 +244,12 @@ void *karmalloc(size_t nbytes) {
             } else {
                 p->s.size -= nunits;
                 p += p->s.size;
-                p->s.size = nunits;
-            }
+                p->s.size             ;
+           }
             allocp = q;
             return ((char *)(p + 1)); // return only data part (without header)
         }
-        if (p == allocp && (p = morecore(nunits)) == NULL) {
+        if (p == allocp && (p = karmorecore(nunits)) == NULL) {
             // when p returns to start block (in case there is not block which has enough memory)
             // TODO: implement morecore
             return (NULL);
@@ -251,7 +257,22 @@ void *karmalloc(size_t nbytes) {
     }
 }
 
+static PMemHeader *
+karmorecore(u_int32_t nu)
+{
+    char *cp;
+    PMemHeader *up;
+    int rnu;
 
+    rnu = NALLOC * ((nu + NALLOC - 1) / NALLOC);
+    cp = sbrk(rnu * sizeof(PMemHeader));
+    if ((long)cp == NULL)
+        return (NULL);
+    up = (PMemHeader *)cp;
+    up->s.size = rnu;
+    free((char *)(up + 1));
+    return (allocp);
+}
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
     node_tid--;
