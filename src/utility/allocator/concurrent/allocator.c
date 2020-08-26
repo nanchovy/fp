@@ -232,11 +232,11 @@ void *karmalloc(size_t nbytes) {
                 q->s.ptr = p->s.ptr;
             else {
                 p->s.size -= nunits;
+                printf("remaing p size: %d\n", p->s.size);
                 p += p->s.size;
                 p->s.size = nunits;
            }
             allocp = q;
-            printf("remaing p size: %d\n", p->s.size);
             return ((char *)(p + 1)); // return only data part (without header)
         }
         if (p == allocp && (p = karmorecore(nunits)) == NULL) {
