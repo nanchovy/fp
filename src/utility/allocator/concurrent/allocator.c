@@ -42,6 +42,7 @@ typedef struct MemoryRoot {
  * nスレッドごとにn * nのフリーリストを持ち，ノードのスレッドidと同じリストに返す
  */
 
+int _mmap_fd;
 void *_pmem_mmap_head = NULL;
 void *_pmem_user_head = NULL;
 size_t _pmem_mmap_size = 0;
@@ -105,39 +106,39 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
 
     struct stat fi;
     int err;
-    int fd = open(path, O_RDWR);
-    if (fd == -1) {
+    _mmap_fd = open(path, O_RDWR);
+    if (_mmap_fd == -1) {
         if (errno == ENOENT) {
             AllocatorHeader new_header;
             new_header.node_head = PADDR_NULL;
-            fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-            int written_size = write(fd, &new_header, sizeof(AllocatorHeader));
+            _mmap_fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+            int written_size = write(_mmap_fd, &new_header, sizeof(AllocatorHeader));
             if (written_size < sizeof(ppointer)) {
                 perror("write");
                 return -1;
             }
-            lseek(fd, 0, SEEK_SET);
+            lseek(_mmap_fd, 0, SEEK_SET);
         }
-        if (fd == -1) {
+        if (_mmap_fd == -1) {
             perror("open");
             return -1;
         }
     }
 
     // extend file
-    if (fstat(fd, &fi) == -1) {
+    if (fstat(_mmap_fd, &fi) == -1) {
         perror("fstat");
         return -1;
     }
     if (fi.st_size < pmem_size) {
-        err = ftruncate(fd, pmem_size);
+        err = ftruncate(_mmap_fd, pmem_size);
         if (err != 0) {
             perror("ftruncate");
             return -1;
         }
     }
 
-    _pmem_mmap_head = mmap(NULL, pmem_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+    _pmem_mmap_head = mmap(NULL, pmem_size, PROT_READ|PROT_WRITE, MAP_SHARED, _mmap_fd, 0);
     if (_pmem_mmap_head == MAP_FAILED) {
         perror("mmap");
         return -1;
@@ -157,7 +158,7 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
     // // base.s.size = _pmem_user_size - sizeof(PMemHeader);
 
     // fd can be closed after mmap
-    err = close(fd);
+    err = close(_mmap_fd);
     if (err == -1) {
         perror("close");
         return -1;
@@ -269,18 +270,27 @@ void karfree(void *ap) {
 }
 
 PMemHeader* karmorecore(u_int32_t nu) {
-    char *cp;
-    PMemHeader *up;
-    int rnu;
+    // char *cp;
+    // PMemHeader *up;
+    // int rnu;
 
-    rnu = NALLOC * ((nu + NALLOC - 1) / NALLOC);
-    cp = sbrk(rnu * sizeof(PMemHeader));
-    if ((long)cp == NULL)
-        return (NULL);
-    up = (PMemHeader *)cp;
-    up->s.size = rnu;
-    karfree((char *)(up + 1));
-    return (allocp);
+    // rnu = NALLOC * ((nu + NALLOC - 1) / NALLOC);
+    // cp = sbrk(rnu * sizeof(PMemHeader));
+    // if ((long)cp == NULL)
+    //     return (NULL);
+    // up = (PMemHeader *)cp;
+    // up->s.size = rnu;
+    // karfree((char *)(up + 1));
+    // return (allocp);
+    int err = munmap(_pmem_mmap_head, _pmem_mmap_size);
+    if (err == -1) {
+        perror("munmap");
+        return -1;
+    }
+    _pmem_mmap_size *= 2;
+    _pmem_user_size = _pmem_mmap_size - _pmem_mmap_head;
+    mmap(_pmem_mmap_head, _pmem_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, _mmap_fd, 0);
+    return allocp;
 }
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
