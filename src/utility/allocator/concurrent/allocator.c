@@ -287,8 +287,9 @@ PMemHeader* karmorecore(u_int32_t nu) {
         perror("munmap");
         return -1;
     }
+
+    _pmem_user_size += _pmem_mmap_size;
     _pmem_mmap_size *= 2;
-    _pmem_user_size = _pmem_mmap_size - _pmem_mmap_head;
     mmap(_pmem_mmap_head, _pmem_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, _mmap_fd, 0);
     return allocp;
 }
