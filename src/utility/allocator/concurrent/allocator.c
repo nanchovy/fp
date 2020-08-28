@@ -281,17 +281,23 @@ PMemHeader* karmorecore(u_int32_t nu) {
     // up = (PMemHeader *)cp;
     // up->s.size = rnu;
     // karfree((char *)(up + 1));
+    perror("karmalloc");
     // return (allocp);
-    int err = munmap(_pmem_mmap_head, _pmem_mmap_size);
-    if (err == -1) {
-        perror("munmap");
-        return -1;
-    }
 
-    _pmem_user_size += _pmem_mmap_size;
-    _pmem_mmap_size *= 2;
-    mmap(_pmem_mmap_head, _pmem_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, _mmap_fd, 0);
-    return allocp;
+    
+    // PMemHeader np;
+    // int nofunits;
+
+    // int err = munmap(_pmem_mmap_head, _pmem_mmap_size);
+    // if (err == -1) {
+    //     perror("munmap");
+    //     return -1;
+    // }
+    // nofunits = (_pmem_mmap_size - sizeof(PMemHeader)) / sizeof(PMemHeader);
+    // _pmem_user_size += _pmem_mmap_size;
+    // _pmem_mmap_size *= 2;
+    // mmap(_pmem_mmap_head, _pmem_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, _mmap_fd, 0);
+    // return allocp;
 }
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
