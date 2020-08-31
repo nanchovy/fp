@@ -251,21 +251,28 @@ void *karmalloc(size_t nbytes) {
 void karfree(void *ap) {
 	PMemHeader *p, *q;
 
-	p = (PMemHeader *) ap - 1;
-	for (q = allocp; !(p > q && p < q->s.ptr); q = q->s.ptr)
-		if (q >= q->s.ptr && (p > q || p < q->s.ptr))
+    p = (PMemHeader *)ap - 1; // freeing unit's header 
+    for (q = allocp; !(p > q && p < q->s.ptr); q = q->s.ptr)
+        if (q >= q->s.ptr && (p > q || p < q->s.ptr))
 			break;
 
 	if (p + p->s.size == q->s.ptr) {
+        // if p is next to q->s.ptr (...|p|nextone|...)
 		p->s.size += q->s.ptr->s.size;
 		p->s.ptr = q->s.ptr->s.ptr;
-	} else
+	} else {
+        // there's some space between p and nextone (...|p|...|nextone|...)
 		p->s.ptr = q->s.ptr;
+    }
+
 	if (q + q->s.size == p) {
+        // if p is next to q (...|q|p|...)
 		q->s.size += p->s.size;
 		q->s.ptr = p->s.ptr;
-	} else
-		q->s.ptr = p;
+	}
+    else { // (...|q|...|p|...)
+        q->s.ptr = p;
+    }
 	allocp = q;
 }
 
