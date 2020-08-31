@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     } else {
         printf("default: loop_times = 40, max_val = 1000\n");
     }
-    initAllocator(NULL, "/mnt/nvmm/iiboshi/data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
+    initAllocator(NULL, "/mnt/nvmm/nagayasu/data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
     bpt = newBPTree();
     kv.key = 1;
     kv.value = 1;
