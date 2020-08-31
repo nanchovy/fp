@@ -226,7 +226,8 @@ void *karmalloc(size_t nbytes) {
         *(PMemHeader *)_pmem_user_head = mem_head;
         base.s.ptr = (PMemHeader *)_pmem_user_head;
         p = base.s.ptr;
-        p->s.ptr = p;
+        printPMemHeaderinfo(p);
+        // p->s.ptr = p;
     }
     for (p = q->s.ptr;; q = p, p = p->s.ptr) {
         if (p->s.size >= nunits) {
