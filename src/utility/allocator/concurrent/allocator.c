@@ -254,8 +254,8 @@ void printfreelist(PMemHeader *p) {
     while(1) {
         printf("adress: %p, ", p);
         printf("number of units: %d, ", p->s.size);
-        printf("next adress: %p\n", p->s.ptr)
-            p = p->s.ptr;
+        printf("next adress: %p\n", p->s.ptr);
+        p = p->s.ptr;
         if (start == p)
             break;
     }
