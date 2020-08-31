@@ -250,13 +250,16 @@ void *karmalloc(size_t nbytes) {
 }
 
 void printfreelist(PMemHeader *p) {
-    PMemHeader *start = p;
-    while(1) {
-        printf("adress: %p, ", p);
-        printf("number of units: %d, ", p->s.size);
-        printf("next adress: %p\n", p->s.ptr);
-        p = p->s.ptr;
-        if (start == p)
+    PMemHeader *start, *printing;
+    start = p;
+    printing = p;
+    while (1)
+    {
+        printf("adress: %p, ", printing);
+        printf("number of units: %d, ", printing->s.size);
+        printf("next adress: %p\n", printing->s.ptr);
+        printing = printing->s.ptr;
+        if (start == printing)
             break;
     }
 }
