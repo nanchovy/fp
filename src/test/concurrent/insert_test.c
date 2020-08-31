@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     BPTree *bpt;
     KeyValuePair kv;
-    int loop_times = 40;
+    int loop_times = 10;
     int max_val = 1000;
     if (argc > 1) {
         loop_times = atoi(argv[1]);
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     } else {
         printf("default: loop_times = 40, max_val = 1000\n");
     }
-    initAllocator(NULL, "data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
+    initAllocator(NULL, "/mnt/nvmm/iiboshi/data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
     bpt = newBPTree();
     kv.key = 1;
     kv.value = 1;
