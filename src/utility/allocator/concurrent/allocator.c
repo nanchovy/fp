@@ -238,6 +238,7 @@ void *karmalloc(size_t nbytes) {
                 p->s.size = nunits;
            }
             allocp = q;
+            printfreelist(p);
             return ((char *)(p + 1)); // return only data part (without header)
         }
         if (p == allocp && (p = karmorecore(nunits)) == NULL) {
@@ -245,6 +246,18 @@ void *karmalloc(size_t nbytes) {
             // TODO: implement morecore
             return (NULL);
         }
+    }
+}
+
+void printfreelist(PMemHeader *p) {
+    PMemHeader *start = p;
+    while(1) {
+        printf("adress: %p, ", p);
+        printf("number of units: %d, ", p->s.size);
+        printf("next adress: %p\n", p->s.ptr)
+            p = p->s.ptr;
+        if (start == p)
+            break;
     }
 }
 
