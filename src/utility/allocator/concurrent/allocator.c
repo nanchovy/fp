@@ -226,6 +226,7 @@ void *karmalloc(size_t nbytes) {
         *(PMemHeader *)_pmem_user_head = mem_head;
         base.s.ptr = (PMemHeader *)_pmem_user_head;
         p = base.s.ptr;
+        p->s.ptr = p;
     }
     for (p = q->s.ptr;; q = p, p = p->s.ptr) {
         if (p->s.size >= nunits) {
@@ -249,15 +250,19 @@ void *karmalloc(size_t nbytes) {
     }
 }
 
+void printPMemHeaderinfo(PMemHeader *p) {
+    printf("adress: %p, ", p);
+    printf("number of units: %d, ", p->s.size);
+    printf("next adress: %p\n", p->s.ptr);
+}
+
 void printfreelist(PMemHeader *p) {
     PMemHeader *start, *printing;
     start = p;
     printing = p;
     while (1)
     {
-        printf("adress: %p, ", printing);
-        printf("number of units: %d, ", printing->s.size);
-        printf("next adress: %p\n", printing->s.ptr);
+        printPMemHeaderinfo(printing);
         printing = printing->s.ptr;
         if (start == printing)
             break;
