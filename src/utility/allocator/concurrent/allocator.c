@@ -211,6 +211,7 @@ ppointer pst_mem_allocate(size_t size, unsigned char tid) {
 }
 
 void *karmalloc(size_t nbytes) {
+    MemoryRoot *mr = (MemoryRoot *)_pmem_user_head;
     PMemHeader *p, *q;
     unsigned nunits;
 
