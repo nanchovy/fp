@@ -30,26 +30,29 @@ int main(int argc, char *argv[]) {
     kv.value = 1;
     for (int i = 1; i <= loop_times; i++) {
         kv.key = i;
-        //printf("insert %ld\n", kv.key);
+        printf("insert %ld\n", kv.key);
         if (insert(bpt, kv, 1)) {
-           // printf("success\n");
+           printf("success\n");
         } else {
-            //printf("failure\n");
+            printf("failure\n");
         }
     }
-    //showTree(bpt, 1);
+    showTree(bpt, 1);
     srand((unsigned) time(NULL));
     for (int i = 1; i <= loop_times; i++) {
         kv.key = rand() % max_val;
-     //   printf("insert %ld\n", kv.key);
+       printf("insert %ld\n", kv.key);
         if (insert(bpt, kv, 1)) {
-       //     printf("success\n");
+           printf("success\n");
         } else {
-         //   printf("failure\n");
+           printf("failure\n");
         }
     }
 
-    //showTree(bpt, 1);
+    showTree(bpt, 1);
+
+    printfreelist();
+
     destroyBPTree(bpt, 1);
     destroyAllocator();
 

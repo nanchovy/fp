@@ -259,12 +259,11 @@ void printPMemHeaderinfo(PMemHeader *p) {
     printf("next adress: %p\n", p->s.ptr);
 }
 
-void printfreelist(PMemHeader *p) {
+void printfreelist() {
     PMemHeader *start, *printing;
-    start = p;
+    start = base;
     printing = p;
-    while (1)
-    {
+    while (1) {
         printPMemHeaderinfo(printing);
         printing = printing->s.ptr;
         if (start == printing)
