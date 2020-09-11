@@ -261,8 +261,7 @@ void printPMemHeaderinfo(PMemHeader *p) {
 
 void printfreelist() {
     PMemHeader *start, *printing;
-    start = base;
-    printing = p;
+    start = printing = &base;
     while (1) {
         printPMemHeaderinfo(printing);
         printing = printing->s.ptr;
