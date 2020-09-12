@@ -30,11 +30,10 @@ int main(int argc, char *argv[])
   kv.key = 1;
   kv.value = 1;
   for (int i = 1; i <= 10; i++) {
-
-    ppointer new_pleaf_p = pst_mem_allocate(16, 1);
-    if (i % 3 == 2) {
-      pst_mem_free(new_pleaf_p, 1, 1);
-    }
+    ppointer new_pleaf_p1 = pst_mem_allocate(16, 1);
+    ppointer new_pleaf_p2 = pst_mem_allocate(16, 1);
+    ppointer new_pleaf_p3 = pst_mem_allocate(16, 1);
+    pst_mem_free(new_pleaf_p2, 1, 1);
     printfreelist();
   }
 
