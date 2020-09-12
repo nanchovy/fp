@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     printfreelist();
     ppointer new_pleaf_p = pst_mem_allocate(16, 1);
     if (i % 3 == 0) {
-      pst_mem_free(new_pleaf_p);
+      pst_mem_free(new_pleaf_p, 1, 1);
     }
   }
 
