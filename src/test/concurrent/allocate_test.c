@@ -30,8 +30,11 @@ int main(int argc, char *argv[])
   kv.key = 1;
   kv.value = 1;
   for (int i = 1; i <= 10; i++) {
-    ppointer new_pleaf_p = pst_mem_allocate(16, 1);
     printfreelist();
+    ppointer new_pleaf_p = pst_mem_allocate(16, 1);
+    if (i % 3 == 0) {
+      pst_mem_free(new_pleaf_p);
+    }
   }
 
   showTree(bpt, 1);

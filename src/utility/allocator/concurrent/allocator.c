@@ -262,14 +262,14 @@ void printPMemHeaderinfo(PMemHeader *p) {
 void printfreelist() {
     PMemHeader *start, *printing;
     start = printing = &base;
-    printf("----------");
+    printf("----------\n");
     while (1) {
         printPMemHeaderinfo(printing);
         printing = printing->s.ptr;
         if (start == printing)
             break;
     }
-    printf("----------");
+    printf("----------\n");
 }
 
 void karfree(void *ap) {
