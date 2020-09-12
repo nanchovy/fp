@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
   bpt = newBPTree();
   kv.key = 1;
   kv.value = 1;
-  for (int i = 1; i <= 10; i++) {
+  for (int i = 1; i <= 100; i++) {
     ppointer new_pleaf_p1 = pst_mem_allocate(16, 1);
     ppointer new_pleaf_p2 = pst_mem_allocate(16, 1);
     ppointer new_pleaf_p3 = pst_mem_allocate(16, 1);
