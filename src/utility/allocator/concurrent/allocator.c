@@ -234,10 +234,10 @@ void *karmalloc(size_t nbytes) {
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
     {
         if (p->s.size >= nunits) {
-            if (p->s.size == nunits) // exactly
+            if (p->s.size == nunits) { // exactly
                 q->s.ptr = p->s.ptr;
                 persist(q, sizeof(PMemHeader));
-            else {
+            } else {
                 p->s.size -= nunits;
                 persist(p, sizeof(PMemHeader));
                 p += p->s.size;
