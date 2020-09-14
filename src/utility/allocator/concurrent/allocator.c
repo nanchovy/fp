@@ -220,11 +220,11 @@ void *karmalloc(size_t nbytes) {
     nunits = (nbytes + sizeof(PMemHeader) - 1) / sizeof(PMemHeader) + 1; // number of block this function looking for
     if (allocp == NULL) {
         // initialization
-        base->s.ptr = allocp = *base;
+        base->s.ptr = allocp = base;
         base->s.size = 0;
         
         PMemHeader mem_head;
-        mem_head.s.ptr = *base;
+        mem_head.s.ptr = base;
         mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(PMemHeader); // user size except memory root
         *(PMemHeader *)_pmem_memory_root = mem_head;
         base->s.ptr = (PMemHeader *)_pmem_memory_root;
