@@ -54,7 +54,7 @@ unsigned char _initialized_by_others = 0;
 
 
 
-PMemHeader base;
+PMemHeader *base;
 PMemHeader *allocp;
 #define NALLOC 128
 
@@ -197,6 +197,9 @@ ppointer *root_allocate(size_t size, size_t node_size) {
     if (isSamePAddr(PADDR_NULL, ((AllocatorHeader*)_pmem_mmap_head)->node_head)) {
         ((AllocatorHeader *)_pmem_mmap_head)->node_head = getPersistentAddr(_pmem_user_head);
     }
+
+    base = _pmem_mmap_head + 16;
+
     return root_p;
 }
 
@@ -217,17 +220,14 @@ void *karmalloc(size_t nbytes) {
     nunits = (nbytes + sizeof(PMemHeader) - 1) / sizeof(PMemHeader) + 1; // number of block this function looking for
     if (allocp == NULL) {
         // initialization
-        base.s.ptr = allocp = &base;
-        base.s.size = 0;
+        base->s.ptr = allocp = *base;
+        base->s.size = 0;
         
         PMemHeader mem_head;
-        mem_head.s.ptr = &base;
+        mem_head.s.ptr = *base;
         mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(PMemHeader); // user size except memory root
         *(PMemHeader *)_pmem_memory_root = mem_head;
-        base.s.ptr = (PMemHeader *)_pmem_memory_root;
-        // p = base.s.ptr;
-       // printPMemHeaderinfo(p);
-        // p->s.ptr = p;
+        base->s.ptr = (PMemHeader *)_pmem_memory_root;
     }
     q = allocp;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
@@ -261,7 +261,7 @@ void printPMemHeaderinfo(PMemHeader *p) {
 
 void printfreelist() {
     PMemHeader *start, *printing;
-    start = printing = &base;
+    start = printing = base;
     printf("----------\n");
     while (1) {
         printPMemHeaderinfo(printing);
