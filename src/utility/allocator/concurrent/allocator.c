@@ -287,20 +287,21 @@ void karfree(void *ap) {
         // if p is next to q->s.ptr (...|p|nextone|...)
 		p->s.size += q->s.ptr->s.size;
 		p->s.ptr = q->s.ptr->s.ptr;
-	} else {
+    } else {
         // there's some space between p and nextone (...|p|...|nextone|...)
 		p->s.ptr = q->s.ptr;
     }
+    persist(p, sizeof(PMemHeader));
 
-	if (q + q->s.size == p) {
+    if (q + q->s.size == p) {
         // if p is next to q (...|q|p|...)
 		q->s.size += p->s.size;
 		q->s.ptr = p->s.ptr;
-	}
-    else { // (...|q|...|p|...)
+    } else { // (...|q|...|p|...)
         q->s.ptr = p;
     }
-	allocp = q;
+    persist(q, sizeof(PMemHeader));
+    allocp = q;
 }
 
 PMemHeader* karmorecore(u_int32_t nu) {
