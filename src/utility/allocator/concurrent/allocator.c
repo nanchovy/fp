@@ -228,6 +228,7 @@ void *karmalloc(size_t nbytes) {
         mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(PMemHeader); // user size except memory root
         *(PMemHeader *)_pmem_memory_root = mem_head;
         base->s.ptr = (PMemHeader *)_pmem_memory_root;
+        persist(base, sizeof(PMemHeader));
     }
     q = allocp;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
@@ -235,14 +236,16 @@ void *karmalloc(size_t nbytes) {
         if (p->s.size >= nunits) {
             if (p->s.size == nunits) // exactly
                 q->s.ptr = p->s.ptr;
+                persist(q, sizeof(PMemHeader));
             else {
                 p->s.size -= nunits;
-               // printf("remaing p size: %d\n", p->s.size);
+                persist(p, sizeof(PMemHeader));
                 p += p->s.size;
                 p->s.size = nunits;
            }
             allocp = q;
             // printfreelist(p);
+            persist(p, sizeof(PMemHeader));
             return ((char *)(p + 1)); // return only data part (without header)
         }
         if (p == allocp && (p = karmorecore(nunits)) == NULL) {
