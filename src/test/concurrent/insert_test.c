@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     BPTree *bpt;
     KeyValuePair kv;
-    int loop_times = 40;
+    int loop_times = 400;
     int max_val = 1000;
     if (argc > 1) {
         loop_times = atoi(argv[1]);
@@ -39,15 +39,15 @@ int main(int argc, char *argv[]) {
     }
     showTree(bpt, 1);
     srand((unsigned) time(NULL));
-    for (int i = 1; i <= loop_times; i++) {
-        kv.key = rand() % max_val;
-        printf("insert %ld\n", kv.key);
-        if (insert(bpt, kv, 1)) {
-            printf("success\n");
-        } else {
-            printf("failure\n");
-        }
-    }
+    // for (int i = 1; i <= loop_times; i++) {
+    //     kv.key = rand() % max_val;
+    //     printf("insert %ld\n", kv.key);
+    //     if (insert(bpt, kv, 1)) {
+    //         printf("success\n");
+    //     } else {
+    //         printf("failure\n");
+    //     }
+    // }
 
     showTree(bpt, 1);
     destroyBPTree(bpt, 1);
