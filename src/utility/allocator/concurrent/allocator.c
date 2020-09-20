@@ -232,7 +232,7 @@ void *karmalloc(size_t nbytes) {
 
 
         // 評価のために大きな領域を分断する．
-        PMemHeader *startp = allocp->s.ptr;
+        PMemHeader *startp = base->s.ptr;
         PMemHeader *nextp = startp;
         int one_block_bytes = sizeof(PMemHeader) * 80 * 3;
         int remaining_p_size = startp->s.size;
