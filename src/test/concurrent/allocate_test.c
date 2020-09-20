@@ -9,7 +9,7 @@
 int main(int argc, char *argv[]) {
     BPTree *bpt;
     KeyValuePair kv;
-    int loop_loop_times = 10000;
+    int loop_loop_times = 10;
     int loop_times = 320;
     int max_val = 1000;
     struct rusage start, finish;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
                 printf("failure\n");
             }
         }
-        showTree(bpt, 1);
+        // showTree(bpt, 1);
         destroyBPTree(bpt, 1);
         destroyAllocator();
     }
