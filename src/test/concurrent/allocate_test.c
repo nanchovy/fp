@@ -4,6 +4,7 @@
 #include "tree.h"
 #include <stdlib.h>
 #include <time.h>
+#include <sys/resource.h>
 
 int main(int argc, char *argv[]) {
     BPTree *bpt;
