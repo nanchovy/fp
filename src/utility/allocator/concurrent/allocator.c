@@ -243,8 +243,9 @@ void *karmalloc(size_t nbytes) {
             startp->s.ptr = nextp;
             startp = nextp;
             remaining_p_size -= one_block_bytes;
+            printfreelist();
         }
-        printfreelist();
+
     }
     q = allocp;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
