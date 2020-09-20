@@ -229,6 +229,22 @@ void *karmalloc(size_t nbytes) {
         *(PMemHeader *)_pmem_memory_root = mem_head;
         base->s.ptr = (PMemHeader *)_pmem_memory_root;
         persist(base, sizeof(PMemHeader));
+
+
+        // 評価のために大きな領域を分断する．
+        PMemHeader *startp = allocp->s.ptr;
+        PMemHeader *nextp = startp;
+        one_block_bytes = sizeof(PMemHeader) * 80 * 3
+        remaining_p_size = startp->s.size
+
+        while(remaining_p_size > one_block_bytes) {
+            startp->s.size = one_block_bytes;
+            nextp += startp.s.size;
+            startp->s.ptr = nextp;
+            startp = nextp;
+            remaining_p_size -= one_block_bytes;
+        }
+        printfreelist();
     }
     q = allocp;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
