@@ -238,7 +238,7 @@ void *karmalloc(size_t nbytes) {
         int one_block_units = one_block_bytes / sizeof(PMemHeader) + 1;
         int remaining_p_units = startp->s.size;
 
-        while(remaining_p_units > one_block_units) {
+        while(remaining_p_units > one_block_units * 2) {
             startp->s.size = one_block_units;
             nextp += one_block_units;
             startp->s.ptr = nextp;
