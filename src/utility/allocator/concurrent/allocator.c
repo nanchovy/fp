@@ -239,7 +239,7 @@ void *karmalloc(size_t nbytes) {
 
         while(remaining_p_size > one_block_bytes) {
             startp->s.size = one_block_bytes;
-            nextp += startp.s.size;
+            nextp += startp->s.size;
             startp->s.ptr = nextp;
             startp = nextp;
             remaining_p_size -= one_block_bytes;
