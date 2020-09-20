@@ -15,9 +15,9 @@ int main(int argc, char *argv[]) {
     struct rusage start, finish;
     struct timeval user_time, sys_time;
     user_time.tv_sec = 0;
-    user_time.tv_userc = 0;
+    user_time.tv_usec = 0;
     sys_time.tv_sec = 0;
-    sys_time.tv_userc = 0;
+    sys_time.tv_usec = 0;
 
     for (int j = 1; j <= loop_times; j++) {
         initAllocator(NULL, "/mnt/nvmm/nagayasu/data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
