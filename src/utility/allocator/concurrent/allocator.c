@@ -236,14 +236,16 @@ void *karmalloc(size_t nbytes) {
         PMemHeader *nextp = startp;
         int one_block_bytes = 1200 * 2;  // one block = 1152 bytes
         int one_block_units = one_block_bytes / sizeof(PMemHeader) + 1;
-        int remaining_p_size = startp->s.size;
+        int remaining_p_units = startp->s.size;
 
-        while(remaining_p_size > one_block_units) {
+        while(remaining_p_units > one_block_units) {
             startp->s.size = one_block_units;
             nextp += one_block_units;
             startp->s.ptr = nextp;
             startp = nextp;
-            remaining_p_size -= one_block_units;
+            remaining_p_units -= one_block_units;
+            nextp->s.size = remaining_p_units;
+            nextp->s.ptr = base;
             printfreelist();
         }
 
