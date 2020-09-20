@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
     BPTree *bpt;
     KeyValuePair kv;
-    int loop_times = 400;
+    int loop_times = 40;
     int max_val = 1000;
     if (argc > 1) {
         loop_times = atoi(argv[1]);
@@ -22,9 +22,9 @@ int main(int argc, char *argv[]) {
             return 1;
         }
     } else {
-    //    printf("default: loop_times = 40, max_val = 1000\n");
+        printf("default: loop_times = 40, max_val = 1000\n");
     }
-    initAllocator(NULL, "/mnt/nvmm/nagayasu/data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
+    initAllocator(NULL, "data", sizeof(PersistentLeafNode) * (loop_times * 2 / (MAX_PAIR / 2) + 1 + sizeof(AllocatorHeader)), 1);
     bpt = newBPTree();
     kv.key = 1;
     kv.value = 1;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
         kv.key = i;
         printf("insert %ld\n", kv.key);
         if (insert(bpt, kv, 1)) {
-           printf("success\n");
+            printf("success\n");
         } else {
             printf("failure\n");
         }
@@ -41,18 +41,15 @@ int main(int argc, char *argv[]) {
     srand((unsigned) time(NULL));
     for (int i = 1; i <= loop_times; i++) {
         kv.key = rand() % max_val;
-       printf("insert %ld\n", kv.key);
+        printf("insert %ld\n", kv.key);
         if (insert(bpt, kv, 1)) {
-           printf("success\n");
+            printf("success\n");
         } else {
-           printf("failure\n");
+            printf("failure\n");
         }
     }
 
     showTree(bpt, 1);
-
-    printfreelist();
-
     destroyBPTree(bpt, 1);
     destroyAllocator();
 
