@@ -231,23 +231,23 @@ void *karmalloc(size_t nbytes) {
         persist(base, sizeof(PMemHeader));
 
 
-        // 評価のために大きな領域を分断する．
-        PMemHeader *startp = base->s.ptr;
-        PMemHeader *nextp = startp;
-        int one_block_bytes = 1200 * 2;  // one block = 1152 bytes
-        int one_block_units = one_block_bytes / sizeof(PMemHeader) + 1;
-        int remaining_p_units = startp->s.size;
+        // // 評価のために大きな領域を分断する．
+        // PMemHeader *startp = base->s.ptr;
+        // PMemHeader *nextp = startp;
+        // int one_block_bytes = 1200 * 2;  // one block = 1152 bytes
+        // int one_block_units = one_block_bytes / sizeof(PMemHeader) + 1;
+        // int remaining_p_units = startp->s.size;
 
-        while(remaining_p_units > one_block_units * 2) {
-            startp->s.size = one_block_units;
-            nextp += one_block_units;
-            startp->s.ptr = nextp;
-            startp = nextp;
-            remaining_p_units -= one_block_units;
-            nextp->s.size = remaining_p_units;
-            nextp->s.ptr = base;
-            printfreelist();
-        }
+        // while(remaining_p_units > one_block_units * 2) {
+        //     startp->s.size = one_block_units;
+        //     nextp += one_block_units;
+        //     startp->s.ptr = nextp;
+        //     startp = nextp;
+        //     remaining_p_units -= one_block_units;
+        //     nextp->s.size = remaining_p_units;
+        //     nextp->s.ptr = base;
+        //     printfreelist();
+        // }
 
     }
     q = allocp;
