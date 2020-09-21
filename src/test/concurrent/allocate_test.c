@@ -35,14 +35,13 @@ int main(int argc, char *argv[])
   getrusage(RUSAGE_SELF, &start);
   for (int i = 1; i <= 10; i++) {
     ppointer new_pleaf_p1 = pst_mem_allocate(16, 1);
-    ppointer new_pleaf_p2 = pst_mem_allocate(32, 1);
-    ppointer new_pleaf_p3 = pst_mem_allocate(64, 1);
-    ppointer new_pleaf_p4 = pst_mem_allocate(70, 1);
-    pst_mem_free(new_pleaf_p3, 1, 1);
     printfreelist();
   }
   getrusage(RUSAGE_SELF, &finish);
-  showTree(bpt, 1);
+//   showTree(bpt, 1);
+
+  destroyBPTree(bpt, 1);
+  destroyAllocator();
 
   printf("usr time: %ld.%d\n", finish.ru_utime.tv_sec - start.ru_utime.tv_sec, finish.ru_utime.tv_usec - start.ru_utime.tv_usec);
   printf("sys time: %ld.%d\n", finish.ru_stime.tv_sec - start.ru_stime.tv_sec, finish.ru_stime.tv_usec - start.ru_stime.tv_usec);
