@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   } else {
        printf("default: loop_times = 40, max_val = 1000\n");
   }
-  initAllocator(NULL, "/mnt/nvmm/nagayasu/data", 320 * 150, 1);
+  initAllocator(NULL, "/mnt/nvmm/nagayasu/data", 320 * loop_times + 100, 1);
   bpt = newBPTree();
   kv.key = 1;
   kv.value = 1;
