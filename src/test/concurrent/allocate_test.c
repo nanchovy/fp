@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
   struct rusage start, finish;
   BPTree *bpt;
   KeyValuePair kv;
-  int loop_times = 400;
+  int loop_times = 4;
   int max_val = 1000;
   if (argc > 1) {
     loop_times = atoi(argv[1]);
