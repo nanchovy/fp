@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
   getrusage(RUSAGE_SELF, &start);
   for (int i = 1; i <= loop_times; i++) {
     ppointer new_pleaf_p1 = pst_mem_allocate(ALLOCATING_BYTES, 1);
-    printfreelist();
   }
   getrusage(RUSAGE_SELF, &finish);
 //   showTree(bpt, 1);
