@@ -16,20 +16,7 @@ int main(int argc, char *argv[])
   
   int loop_times = 100;
   int max_val = 1000;
-  if (argc > 1) {
-    loop_times = atoi(argv[1]);
-    if (loop_times <= 0) {
-      printf("invalid argument\n");
-      return 1;
-    }
-    max_val = atoi(argv[2]);
-    if (max_val <= 0) {
-      printf("invalid argument\n");
-      return 1;
-    }
-  } else {
-       printf("default: loop_times = 40, max_val = 1000\n");
-  }
+
   initAllocator(NULL, "/mnt/nvmm/nagayasu/data", 320 * loop_times + 100, 1);
   bpt = newBPTree();
   kv.key = 1;
