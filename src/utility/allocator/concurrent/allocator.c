@@ -265,7 +265,6 @@ void *karmalloc(size_t nbytes) {
            }
             allocp = q;
             // printfreelist(p);
-            persist(p, sizeof(PMemHeader));
             return ((char *)(p + 1)); // return only data part (without header)
         }
         if (p == allocp && (p = karmorecore(nunits)) == NULL) {
