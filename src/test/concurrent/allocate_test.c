@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
   destroyBPTree(bpt, 1);
   destroyAllocator();
 
+  allocp = NULL;
 
   initAllocator(NULL, "/mnt/nvmm/nagayasu/data", 320 * loop_times + 100, 1);
   bpt = newBPTree();
