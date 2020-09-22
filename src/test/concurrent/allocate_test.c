@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
   BPTree *bpt;
   KeyValuePair kv;
   
-  int loop_times = 500;
+  int loop_times = 400;
   int max_val = 1000;
 
   initAllocator(NULL, "/mnt/nvmm/nagayasu/data", 320 * loop_times + 100, 1);
