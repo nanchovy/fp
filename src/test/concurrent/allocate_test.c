@@ -11,7 +11,7 @@
 int main(int argc, char *argv[])
 {
   struct rusage start, finish, result;
-  result.ru_utime.tv_sec = result.ru_utime.tv_ssec = 0;
+  result.ru_utime.tv_sec = result.ru_utime.tv_sec = 0;
   result.ru_stime.tv_usec = result.ru_stime.tv_usec = 0;
 
   BPTree *bpt;
