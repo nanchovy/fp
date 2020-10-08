@@ -55,7 +55,7 @@ union Pheader {
     ALIGN x;
 };
 
-typedef union Pheader PMemHeader;
+typedef union Pheader Chank;
 
 int initAllocator(void *, const char *, size_t, unsigned char);
 int destroyAllocator();
@@ -72,7 +72,7 @@ ppointer getPersistentAddr(void *);
 void *getTransientAddr(ppointer);
 
 void *karmalloc(size_t nbytes);
-PMemHeader *karmorecore(u_int32_t nu);
+Chank *karmorecore(u_int32_t nu);
 
 void resetAllocp();
 

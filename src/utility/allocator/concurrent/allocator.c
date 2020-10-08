@@ -54,8 +54,8 @@ unsigned char _initialized_by_others = 0;
 
 
 
-PMemHeader *base;
-PMemHeader *allocp;
+Chank *base;
+Chank *allocp;
 #define NALLOC 128
 
 void initMemoryRoot(MemoryRoot *mr, unsigned char thread_num, void *head, size_t pmem_size, size_t node_size, FreeNode *global_list_head) {
@@ -208,21 +208,21 @@ ppointer pst_mem_allocate(size_t size, unsigned char tid) {
 }
 
 void *karmalloc(size_t nbytes) {
-    PMemHeader *p, *q;
+    Chank *p, *q;
     unsigned nunits;
 
-    nunits = (nbytes + sizeof(PMemHeader) - 1) / sizeof(PMemHeader) + 1; // number of block this function looking for
+    nunits = (nbytes + sizeof(Chank) - 1) / sizeof(Chank) + 1; // number of block this function looking for
     if (allocp == NULL) {
         // initialization
         base->s.ptr = allocp = base;
         base->s.size = 0;
         
-        PMemHeader mem_head;
+        Chank mem_head;
         mem_head.s.ptr = base;
-        mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(PMemHeader); // user size except memory root
-        *(PMemHeader *)_pmem_memory_root = mem_head;
-        base->s.ptr = (PMemHeader *)_pmem_memory_root;
-        persist(base, sizeof(PMemHeader));
+        mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(Chank); // user size except memory root
+        *(Chank *)_pmem_memory_root = mem_head;
+        base->s.ptr = (Chank *)_pmem_memory_root;
+        persist(base, sizeof(Chank));
     }
     q = allocp;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
@@ -230,13 +230,13 @@ void *karmalloc(size_t nbytes) {
         if (p->s.size >= nunits) {
             if (p->s.size == nunits) { // exactly
                 q->s.ptr = p->s.ptr;
-                persist(q, sizeof(PMemHeader));
+                persist(q, sizeof(Chank));
             } else {
                 p->s.size -= nunits;
-                persist(p, sizeof(PMemHeader));
+                persist(p, sizeof(Chank));
                 p += p->s.size;
                 p->s.size = nunits;
-                persist(p, sizeof(PMemHeader));
+                persist(p, sizeof(Chank));
            }
             allocp = q;
             // printfreelist(p);
@@ -251,18 +251,18 @@ void *karmalloc(size_t nbytes) {
     }
 }
 
-void printPMemHeaderinfo(PMemHeader *p) {
+void printChankinfo(Chank *p) {
     printf("adress: %p, ", p);
     printf("number of units: %u, ", p->s.size);
     printf("next adress: %p\n", p->s.ptr);
 }
 
 void printfreelist() {
-    PMemHeader *start, *printing;
+    Chank *start, *printing;
     start = printing = base;
     printf("----------\n");
     while (1) {
-        printPMemHeaderinfo(printing);
+        printChankinfo(printing);
         printing = printing->s.ptr;
         if (start == printing)
             break;
@@ -271,9 +271,9 @@ void printfreelist() {
 }
 
 void karfree(void *ap) {
-	PMemHeader *p, *q;
+	Chank *p, *q;
 
-    p = (PMemHeader *)ap - 1; // freeing unit's header 
+    p = (Chank *)ap - 1; // freeing unit's header 
     for (q = allocp; !(p > q && p < q->s.ptr); q = q->s.ptr)
         if (q >= q->s.ptr && (p > q || p < q->s.ptr))
 			break;
@@ -286,7 +286,7 @@ void karfree(void *ap) {
         // there's some space between p and nextone (...|p|...|nextone|...)
 		p->s.ptr = q->s.ptr;
     }
-    persist(p, sizeof(PMemHeader));
+    persist(p, sizeof(Chank));
 
     if (q + q->s.size == p) {
         // if p is next to q (...|q|p|...)
@@ -295,11 +295,11 @@ void karfree(void *ap) {
     } else { // (...|q|...|p|...)
         q->s.ptr = p;
     }
-    persist(q, sizeof(PMemHeader));
+    persist(q, sizeof(Chank));
     allocp = q;
 }
 
-PMemHeader* karmorecore(u_int32_t nu) {
+Chank* karmorecore(u_int32_t nu) {
 
     printf("karmorecore exiting...\n");
     printfreelist();
