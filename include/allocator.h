@@ -74,6 +74,8 @@ void *getTransientAddr(ppointer);
 void *karmalloc(size_t nbytes);
 PMemHeader *karmorecore(u_int32_t nu);
 
+void resetAllocp();
+
 #  ifdef __cplusplus
 };
 #  endif
