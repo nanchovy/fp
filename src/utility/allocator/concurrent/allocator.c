@@ -54,8 +54,8 @@ unsigned char _initialized_by_others = 0;
 
 
 
-PMemHeader *base;
-PMemHeader *allocp;
+Chank *base;
+Chank *allocp;
 #define NALLOC 128
 
 void initMemoryRoot(MemoryRoot *mr, unsigned char thread_num, void *head, size_t pmem_size, size_t node_size, FreeNode *global_list_head) {
@@ -92,6 +92,10 @@ void *getTransientAddr(ppointer paddr) {
 
 int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned char thread_num) {
     _number_of_thread = thread_num;
+
+    if (pmem_size == 0) {
+        allocp = NULL;
+    }
 
     if (existing_p != NULL) {
         _initialized_by_others = 1;
@@ -147,15 +151,7 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
     _pmem_user_head = _pmem_mmap_head + sizeof(AllocatorHeader);
     _pmem_user_size = pmem_size - sizeof(AllocatorHeader);
     memset(_pmem_mmap_head, 0, _pmem_mmap_size);
-
-
-    // karmalloc
-    // PMemHeader *base_PMemHeader;
-    // base_PMemHeader = (PMemHeader *)_pmem_user_head;
-    // // *(PMemHeader *)_pmem_user_head = base;
-    // *base_PMemHeader = base;
-    // // base.s.ptr = &base;
-    // // base.s.size = _pmem_user_size - sizeof(PMemHeader);
+    base = _pmem_mmap_head + 16;
 
     // fd can be closed after mmap
     err = close(_mmap_fd);
@@ -198,8 +194,6 @@ ppointer *root_allocate(size_t size, size_t node_size) {
         ((AllocatorHeader *)_pmem_mmap_head)->node_head = getPersistentAddr(_pmem_user_head);
     }
 
-    base = _pmem_mmap_head + 16;
-
     return root_p;
 }
 
@@ -214,32 +208,35 @@ ppointer pst_mem_allocate(size_t size, unsigned char tid) {
 }
 
 void *karmalloc(size_t nbytes) {
-    PMemHeader *p, *q;
+    Chank *p, *q;
     unsigned nunits;
 
-    nunits = (nbytes + sizeof(PMemHeader) - 1) / sizeof(PMemHeader) + 1; // number of block this function looking for
+    nunits = (nbytes + sizeof(Chank) - 1) / sizeof(Chank) + 1; // number of block this function looking for
     if (allocp == NULL) {
         // initialization
         base->s.ptr = allocp = base;
         base->s.size = 0;
         
-        PMemHeader mem_head;
+        Chank mem_head;
         mem_head.s.ptr = base;
-        mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(PMemHeader); // user size except memory root
-        *(PMemHeader *)_pmem_memory_root = mem_head;
-        base->s.ptr = (PMemHeader *)_pmem_memory_root;
+        mem_head.s.size = (_pmem_user_size - (_pmem_memory_root->global_free_area_head - _pmem_user_head)) / sizeof(Chank); // user size except memory root
+        *(Chank *)_pmem_memory_root = mem_head;
+        base->s.ptr = (Chank *)_pmem_memory_root;
+        persist(base, sizeof(Chank));
     }
     q = allocp;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
     {
         if (p->s.size >= nunits) {
-            if (p->s.size == nunits) // exactly
+            if (p->s.size == nunits) { // exactly
                 q->s.ptr = p->s.ptr;
-            else {
+                persist(q, sizeof(Chank));
+            } else {
                 p->s.size -= nunits;
-               // printf("remaing p size: %d\n", p->s.size);
+                persist(p, sizeof(Chank));
                 p += p->s.size;
                 p->s.size = nunits;
+                persist(p, sizeof(Chank));
            }
             allocp = q;
             // printfreelist(p);
@@ -248,23 +245,24 @@ void *karmalloc(size_t nbytes) {
         if (p == allocp && (p = karmorecore(nunits)) == NULL) {
             // when p returns to start block (in case there is not block which has enough memory)
             // TODO: implement morecore
+            printf("cannot karmalloc\n");
             return (NULL);
         }
     }
 }
 
-void printPMemHeaderinfo(PMemHeader *p) {
+void printChankinfo(Chank *p) {
     printf("adress: %p, ", p);
-    printf("number of units: %d, ", p->s.size);
+    printf("number of units: %u, ", p->s.size);
     printf("next adress: %p\n", p->s.ptr);
 }
 
 void printfreelist() {
-    PMemHeader *start, *printing;
+    Chank *start, *printing;
     start = printing = base;
     printf("----------\n");
     while (1) {
-        printPMemHeaderinfo(printing);
+        printChankinfo(printing);
         printing = printing->s.ptr;
         if (start == printing)
             break;
@@ -273,9 +271,9 @@ void printfreelist() {
 }
 
 void karfree(void *ap) {
-	PMemHeader *p, *q;
+	Chank *p, *q;
 
-    p = (PMemHeader *)ap - 1; // freeing unit's header 
+    p = (Chank *)ap - 1; // freeing unit's header 
     for (q = allocp; !(p > q && p < q->s.ptr); q = q->s.ptr)
         if (q >= q->s.ptr && (p > q || p < q->s.ptr))
 			break;
@@ -284,51 +282,28 @@ void karfree(void *ap) {
         // if p is next to q->s.ptr (...|p|nextone|...)
 		p->s.size += q->s.ptr->s.size;
 		p->s.ptr = q->s.ptr->s.ptr;
-	} else {
+    } else {
         // there's some space between p and nextone (...|p|...|nextone|...)
 		p->s.ptr = q->s.ptr;
     }
+    persist(p, sizeof(Chank));
 
-	if (q + q->s.size == p) {
+    if (q + q->s.size == p) {
         // if p is next to q (...|q|p|...)
 		q->s.size += p->s.size;
 		q->s.ptr = p->s.ptr;
-	}
-    else { // (...|q|...|p|...)
+    } else { // (...|q|...|p|...)
         q->s.ptr = p;
     }
-	allocp = q;
+    persist(q, sizeof(Chank));
+    allocp = q;
 }
 
-PMemHeader* karmorecore(u_int32_t nu) {
-    // char *cp;
-    // PMemHeader *up;
-    // int rnu;
+Chank* karmorecore(u_int32_t nu) {
 
-    // rnu = NALLOC * ((nu + NALLOC - 1) / NALLOC);
-    // cp = sbrk(rnu * sizeof(PMemHeader));
-    // if ((long)cp == NULL)
-    //     return (NULL);
-    // up = (PMemHeader *)cp;
-    // up->s.size = rnu;
-    // karfree((char *)(up + 1));
-    perror("karmalloc");
-    // return (allocp);
-
-    
-    // PMemHeader np;
-    // int nofunits;
-
-    // int err = munmap(_pmem_mmap_head, _pmem_mmap_size);
-    // if (err == -1) {
-    //     perror("munmap");
-    //     return -1;
-    // }
-    // nofunits = (_pmem_mmap_size - sizeof(PMemHeader)) / sizeof(PMemHeader);
-    // _pmem_user_size += _pmem_mmap_size;
-    // _pmem_mmap_size *= 2;
-    // mmap(_pmem_mmap_head, _pmem_mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, _mmap_fd, 0);
-    // return allocp;
+    printf("karmorecore exiting...\n");
+    printfreelist();
+    exit(1);
 }
 
 void pst_mem_free(ppointer node, unsigned char node_tid, unsigned char tid) {
@@ -360,4 +335,10 @@ int destroyAllocator() {
         }
     }
     return 0;
+}
+
+
+void resetAllocp() {
+    allocp = NULL;
+    return;
 }
