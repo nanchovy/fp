@@ -55,7 +55,7 @@ unsigned char _initialized_by_others = 0;
 
 
 Chank *base;
-Chank *allocp;
+Chank *free_list_head;
 #define NALLOC 128
 
 void initMemoryRoot(MemoryRoot *mr, unsigned char thread_num, void *head, size_t pmem_size, size_t node_size, FreeNode *global_list_head) {
@@ -94,7 +94,7 @@ int initAllocator(void *existing_p, const char *path, size_t pmem_size, unsigned
     _number_of_thread = thread_num;
 
     if (pmem_size == 0) {
-        allocp = NULL;
+        free_list_head = NULL;
     }
 
     if (existing_p != NULL) {
@@ -212,9 +212,9 @@ void *karmalloc(size_t nbytes) {
     unsigned nunits;
 
     nunits = (nbytes + sizeof(Chank) - 1) / sizeof(Chank) + 1; // number of block this function looking for
-    if (allocp == NULL) {
+    if (free_list_head == NULL) {
         // initialization
-        base->s.ptr = allocp = base;
+        base->s.ptr = free_list_head = base;
         base->s.size = 0;
         
         Chank mem_head;
@@ -224,7 +224,7 @@ void *karmalloc(size_t nbytes) {
         base->s.ptr = (Chank *)_pmem_memory_root;
         persist(base, sizeof(Chank));
     }
-    q = allocp;
+    q = free_list_head;
     for (p = q->s.ptr;; q = p, p = p->s.ptr)
     {
         if (p->s.size >= nunits) {
@@ -238,11 +238,11 @@ void *karmalloc(size_t nbytes) {
                 p->s.size = nunits;
                 persist(p, sizeof(Chank));
            }
-            allocp = q;
+            free_list_head = q;
             // printfreelist(p);
             return ((char *)(p + 1)); // return only data part (without header)
         }
-        if (p == allocp && (p = karmorecore(nunits)) == NULL) {
+        if (p == free_list_head && (p = karmorecore(nunits)) == NULL) {
             // when p returns to start block (in case there is not block which has enough memory)
             // TODO: implement morecore
             printf("cannot karmalloc\n");
@@ -274,7 +274,7 @@ void karfree(void *ap) {
 	Chank *p, *q;
 
     p = (Chank *)ap - 1; // freeing unit's header 
-    for (q = allocp; !(p > q && p < q->s.ptr); q = q->s.ptr)
+    for (q = free_list_head; !(p > q && p < q->s.ptr); q = q->s.ptr)
         if (q >= q->s.ptr && (p > q || p < q->s.ptr))
 			break;
 
@@ -296,7 +296,7 @@ void karfree(void *ap) {
         q->s.ptr = p;
     }
     persist(q, sizeof(Chank));
-    allocp = q;
+    free_list_head = q;
 }
 
 Chank* karmorecore(u_int32_t nu) {
@@ -338,7 +338,7 @@ int destroyAllocator() {
 }
 
 
-void resetAllocp() {
-    allocp = NULL;
+void resetFreeListHead() {
+    free_list_head = NULL;
     return;
 }
