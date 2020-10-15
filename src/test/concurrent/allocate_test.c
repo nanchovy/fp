@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     }
 
     destroyAllocator();
-    resetAllocp();
+    resetFreeListHead();
 
   // allocatorとMemoryRootの初期化(二回目以降)
     initAllocator(NULL, "/mnt/nvmm/nagayasu/data", ALLOCATING_BYTES * (loop_times + 5) + 100, 1);

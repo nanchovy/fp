@@ -55,7 +55,7 @@ union Pheader {
     ALIGN x;
 };
 
-typedef union Pheader Chank;
+typedef union Pheader Chunk;
 
 int initAllocator(void *, const char *, size_t, unsigned char);
 int destroyAllocator();
@@ -72,9 +72,9 @@ ppointer getPersistentAddr(void *);
 void *getTransientAddr(ppointer);
 
 void *karmalloc(size_t nbytes);
-Chank *karmorecore(u_int32_t nu);
+Chunk *karmorecore(u_int32_t nu);
 
-void resetAllocp();
+void resetFreeListHead();
 
 #  ifdef __cplusplus
 };
